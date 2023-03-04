@@ -1,4 +1,5 @@
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main {
 
@@ -13,17 +14,61 @@ public class Main {
 
     public static void countNiceWords(String word) {
         if (word.length() == 3) {
-            counter1++;
-            //System.out.println(counter1);
+            counter1.getAndIncrement();
         } else if (word.length() == 4)
-            counter2++;
-        else counter3++;
+            counter2.getAndIncrement();
+        else counter3.getAndIncrement();
+    }
+
+    public static boolean isPalindrom(String word) {
+        boolean isWordPalindrom = false;
+        int j = 0;
+        while (j < (int) (word.length() / 2)) {
+            if (word.charAt(j) == word.charAt(word.length() - 1 - j))
+                isWordPalindrom = true;
+            else {
+                isWordPalindrom = false;
+                break;
+            }
+            j++;
+        }
+        return isWordPalindrom;
+    }
+
+    public static boolean isSameLetters(String word) {
+        boolean sameLetters = false;
+        int j = 0;
+        while (j < word.length()) {
+            if (word.charAt(0) == word.charAt(j))
+                sameLetters = true;
+            else {
+                sameLetters = false;
+                break;
+            }
+            j++;
+        }
+        return sameLetters;
+    }
+
+    public static boolean isIncreasing(String word) {
+        boolean isIncreasing = false;
+        int j = 0;
+        while (j < word.length() - 1) {
+            if ((word.charAt(j) < word.charAt(j + 1)) || (word.charAt(j) == word.charAt(j + 1)))
+                isIncreasing = true;
+            else {
+                isIncreasing = false;
+                break;
+            }
+            j++;
+        }
+        return isIncreasing;
     }
 
 
-    public static volatile long counter1 = 0;
-    public static volatile long counter2 = 0;
-    public static volatile long counter3 = 0;
+    public static AtomicInteger counter1 = new AtomicInteger();
+    public static AtomicInteger counter2 = new AtomicInteger();
+    public static AtomicInteger counter3 = new AtomicInteger();
 
     public static void main(String[] args) throws InterruptedException {
         Random random = new Random();
@@ -35,18 +80,8 @@ public class Main {
 
         Thread checkPalindrom = new Thread(() -> {
             for (int i = 0; i < texts.length; i++) {
-                boolean isWordPalindrom = false;
-                int j = 0;
-                while (j < (int) (texts[j].length() / 2)) {
-                    if (texts[i].charAt(j) == texts[i].charAt(texts[i].length() - 1 - j))
-                        isWordPalindrom = true;
-                    else {
-                        isWordPalindrom = false;
-                        break;
-                    }
-                    j++;
-                }
-                if (isWordPalindrom) {
+
+                if ((isPalindrom(texts[i])) && (!isSameLetters(texts[i]))) {
                     countNiceWords(texts[i]);
                     System.out.println("Красивое слово по критерию 1  " + texts[i]);
                 }
@@ -54,20 +89,21 @@ public class Main {
         });
         checkPalindrom.start();
 
+        Thread checkSameLetters = new Thread(() -> {
+            for (int i = 0; i < texts.length; i++) {
+
+                if (isSameLetters(texts[i])) {
+                    countNiceWords(texts[i]);
+                    System.out.println("Красивое слово по критерию 2  " + texts[i]);
+                }
+            }
+        });
+        checkSameLetters.start();
+
         Thread checkIncreasing = new Thread(() -> {
             for (int i = 0; i < texts.length; i++) {
-                boolean isIncreasing = false;
-                int j = 0;
-                while (j < texts[i].length() - 1) {
-                    if ((texts[i].charAt(j) < texts[i].charAt(j + 1))||(texts[i].charAt(j) == texts[i].charAt(j + 1)))
-                        isIncreasing = true;
-                    else {
-                        isIncreasing = false;
-                        break;
-                    }
-                    j++;
-                }
-                if (isIncreasing) {
+
+                if ((isIncreasing(texts[i])) && (!isSameLetters(texts[i]))) {
                     countNiceWords(texts[i]);
                     System.out.println("Красивое слово по критерию 3 " + texts[i]);
                 }
@@ -76,6 +112,7 @@ public class Main {
         checkIncreasing.start();
 
         checkPalindrom.join();
+        checkSameLetters.join();
         checkIncreasing.join();
 
 
